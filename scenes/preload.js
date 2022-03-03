@@ -63,14 +63,14 @@ class preloadGame extends Phaser.Scene {
       assetText.destroy();
     });
 
-    this.load.image("platform", "assets/platform.png");
+    this.load.image("panel", "assets/sprites/blank.png");
     for (var i = 0; i < 425; i++) {
-      this.load.image("platform", "assets/platform.png");
+      this.load.image("panel", "assets/sprites/blank.png");
 
     }
     this.load.bitmapFont('lato', 'assets/fonts/lato_0.png', 'assets/fonts/lato.xml');
 
-        this.load.image("panel", "assets/sprites/blank.png");
+        
 	this.load.image("panel2", "assets/sprites/blank_2.png");
     //this.load.image("trajectory", "assets/sprites/trajectory.png");
     this.load.image("block", "assets/sprites/block.png");

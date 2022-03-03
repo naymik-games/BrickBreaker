@@ -27,6 +27,7 @@ class playGame extends Phaser.Scene {
     super("PlayGame");
   }
   preload() {
+    this.load.plugin('rexraycasterplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexraycasterplugin.min.js', true);
 
   }
   create() {
@@ -197,12 +198,14 @@ class playGame extends Phaser.Scene {
 
     }, this);
 
-    
-
+    this.raycaster = this.plugins.get('rexraycasterplugin').add();
+    this.raycaster.addObstacle(this.blockGroup.getChildren());
+    this.debugGraphics = this.add.graphics();
+    //runRaycaster(this.raycaster, 450,1500, Phaser.Math.DegToRad(-80), this.debugGraphics);
     // lister for collision with world bounds
     this.physics.world.on("worldbounds", this.checkBoundCollision, this);
   }
-
+ 
   changeBG() {
     var bgc = Phaser.Math.Between(0, bgColors.length - 1)
     this.cameras.main.setBackgroundColor(bgColors[bgc]);
@@ -495,10 +498,13 @@ class playGame extends Phaser.Scene {
 
       // change game state because now the player is aiming
       gameState = PLAYER_IS_AIMING;
-
+      var ballX = this.getBallPosition().x;
+      var ballY = this.getBallPosition().y;
       // place trajectory sprite over the ball
-      this.trajectory.x = this.getBallPosition().x;
-      this.trajectory.y = this.getBallPosition().y;
+      this.trajectory.x = ballX;
+      this.trajectory.y = ballY;
+
+      
     }
   }
 
@@ -1326,5 +1332,32 @@ class playGame extends Phaser.Scene {
     emitter.explode(20, blockX, blockY);
 
 
+  }
+}
+
+var runRaycaster = function(raycaster, x, y, angle, debugGraphics) {
+  debugGraphics
+      .clear()
+      .fillStyle(0xC4C400)
+      .fillCircle(x, y, 10);
+
+  const MaxRaycasterCount = 1000;
+  for (var i = 0; i < MaxRaycasterCount; i++) {
+      var result = raycaster.rayToward(x, y, angle);
+      debugGraphics
+          .lineStyle(2, 0x840000)
+          .strokeLineShape(raycaster.ray);
+
+      if (result) {
+          debugGraphics
+              .fillStyle(0xff0000)
+              .fillPoint(result.x, result.y, 4)
+
+          x = result.x;
+          y = result.y;
+          angle = result.reflectAngle;
+      } else {
+          break;
+      }
   }
 }
