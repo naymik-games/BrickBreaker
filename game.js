@@ -27,7 +27,7 @@ class playGame extends Phaser.Scene {
     super("PlayGame");
   }
   preload() {
-    this.load.plugin('rexraycasterplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexraycasterplugin.min.js', true);
+    //this.load.plugin('rexraycasterplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexraycasterplugin.min.js', true);
 
   }
   create() {
@@ -198,9 +198,9 @@ class playGame extends Phaser.Scene {
 
     }, this);
 
-    this.raycaster = this.plugins.get('rexraycasterplugin').add();
-    this.raycaster.addObstacle(this.blockGroup.getChildren());
-    this.debugGraphics = this.add.graphics();
+    // this.raycaster = this.plugins.get('rexraycasterplugin').add();
+    // this.raycaster.addObstacle(this.blockGroup.getChildren());
+    // this.debugGraphics = this.add.graphics();
     //runRaycaster(this.raycaster, 450,1500, Phaser.Math.DegToRad(-80), this.debugGraphics);
     // lister for collision with world bounds
     this.physics.world.on("worldbounds", this.checkBoundCollision, this);
