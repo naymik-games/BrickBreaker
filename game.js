@@ -1,6 +1,6 @@
 let game;
 
-window.onload = function() {
+window.onload = function () {
   let gameConfig = {
     type: Phaser.AUTO,
     backgroundColor: 0x000000,
@@ -32,10 +32,10 @@ class playGame extends Phaser.Scene {
   }
   create() {
     this.cameras.main.fadeIn(800, 0, 0, 0);
-    
-    
-    
-    
+
+
+
+    console.log(rounds[round])
     // {col: 10, row: 13, max: 7, startBalls: 5, startLines: 5, startValue: 5},
     if (gameMode == 'puzzle') {
       gameOptions.blocksPerLine = rounds[round].col,
@@ -45,8 +45,8 @@ class playGame extends Phaser.Scene {
         gameOptions.numLinesStart = rounds[round].startLines,
         gameOptions.startingValue = rounds[round].startValue,
         gameOptions.levelGoal = rounds[round].levelGoal
-        this.allowBlocked = true;
-    } else if(gameMode == 'easy'){
+      this.allowBlocked = true;
+    } else if (gameMode == 'easy') {
       gameOptions.blocksPerLine = 8,
         gameOptions.blockLines = 11,
         gameOptions.maxBlocksPerLine = 6,
@@ -54,8 +54,8 @@ class playGame extends Phaser.Scene {
         gameOptions.numLinesStart = 1,
         gameOptions.startingValue = 0,
         gameOptions.levelGoal = 300
-        this.allowBlocked = false;
-        gameOptions.ballSize =  0.05;
+      this.allowBlocked = false;
+      gameOptions.ballSize = 0.05;
     } else {
       gameOptions.blocksPerLine = 10,
         gameOptions.blockLines = 13,
@@ -64,7 +64,7 @@ class playGame extends Phaser.Scene {
         gameOptions.numLinesStart = 1,
         gameOptions.startingValue = 0,
         gameOptions.levelGoal = 300
-        this.allowBlocked = true;
+      this.allowBlocked = true;
 
     }
 
@@ -120,14 +120,14 @@ class playGame extends Phaser.Scene {
     this.bottomPanel.setTint(0x222222)
 
     this.ballSize = game.config.width * gameOptions.ballSize;
-   
-   
-   this.colorText = this.add.bitmapText(game.config.width -75, this.bottomPanel.y - (this.bottomPanel.displayHeight + 50), 'lato', '0xffffff', 40).setOrigin(.5).setInteractive();
+
+
+    this.colorText = this.add.bitmapText(game.config.width - 75, this.bottomPanel.y - (this.bottomPanel.displayHeight + 50), 'lato', '0xffffff', 40).setOrigin(.5).setInteractive();
 
     this.changeBG();
-   
-   
-   
+
+
+
     //	this.ballSize = this.blockSize * .5;
     // add the first ball
     for (var i = 0; i < gameOptions.numBallsStart; i++) {
@@ -155,17 +155,17 @@ class playGame extends Phaser.Scene {
     this.addTrajectory();
 
     // add a block line
-	if (gameMode == 'puzzle') {
-	  if(rounds[round].prefab.length > 0){
-	    this.addBlockLinePrefab();
-	  } else {
-	    this.addBlockLine(gameOptions.numLinesStart);
-	  }
-		
-	} else {
-		this.addBlockLine(gameOptions.numLinesStart);
-	}
-    
+    if (gameMode == 'puzzle') {
+      if (rounds[round].prefab.length > 0) {
+        this.addBlockLinePrefab();
+      } else {
+        this.addBlockLine(gameOptions.numLinesStart);
+      }
+
+    } else {
+      this.addBlockLine(gameOptions.numLinesStart);
+    }
+
 
     // input listeners
     this.input.on("pointerdown", this.startAiming, this);
@@ -175,25 +175,25 @@ class playGame extends Phaser.Scene {
 
     var UI = this.scene.get('UI');
 
-    UI.events.on('bounce', function() {
+    UI.events.on('bounce', function () {
       this.bouncePU = true
       this.bottomPanel.setTint(0x27ae61)
 
     }, this);
 
-    UI.events.on('double', function() {
+    UI.events.on('double', function () {
       this.doublePU = true;
       //fc6603
       this.ballGroup.setTint(0xfc6603);
     }, this);
 
-    UI.events.on('bomb', function() {
+    UI.events.on('bomb', function () {
       this.bombPU = true;
       //fc6603
       this.ballGroup.setTint(0xff0000);
     }, this);
 
-    UI.events.on('up', function() {
+    UI.events.on('up', function () {
       this.moveBlocksUp();
 
     }, this);
@@ -205,7 +205,7 @@ class playGame extends Phaser.Scene {
     // lister for collision with world bounds
     this.physics.world.on("worldbounds", this.checkBoundCollision, this);
   }
- 
+
   changeBG() {
     var bgc = Phaser.Math.Between(0, bgColors.length - 1)
     this.cameras.main.setBackgroundColor(bgColors[bgc]);
@@ -333,24 +333,24 @@ class playGame extends Phaser.Scene {
 
   }
   addBlockLinePrefab() {
-	for (var r = 0; r < rounds[round].prefab.length; r++){
-		var color = Phaser.Math.Between(0, 21)
-		for (var c = 0; c < rounds[round].prefab[r].length; c++){
-			if(rounds[round].prefab[r][c] > 0){
-				
-				this.addBlock(c * this.blockSize + this.blockSize / 2, this.emptySpace / 2 + (this.blockSize * .5) + (r + 1) * this.blockSize,r + 1,c, false, color, rounds[round].prefab[r][c]);
-			}
-		}
-	}
+    for (var r = 0; r < rounds[round].prefab.length; r++) {
+      var color = Phaser.Math.Between(0, 21)
+      for (var c = 0; c < rounds[round].prefab[r].length; c++) {
+        if (rounds[round].prefab[r][c] > 0) {
+
+          this.addBlock(c * this.blockSize + this.blockSize / 2, this.emptySpace / 2 + (this.blockSize * .5) + (r + 1) * this.blockSize, r + 1, c, false, color, rounds[round].prefab[r][c]);
+        }
+      }
+    }
   }
   // method to add a block at a given x,y position. The third argument tells us if the block is recycled
   addBlock(x, y, r, c, isRecycled, color, val) {
     blockCount++;
-	if(val > 1){
-		var blockValue = val;
-	} else {
-		var blockValue = gameOptions.startingValue;
-	}
+    if (val > 1) {
+      var blockValue = val;
+    } else {
+      var blockValue = gameOptions.startingValue;
+    }
     // block creation as a child of blockGroup
     let block = isRecycled ? this.recycledBlocks.shift() : this.blockGroup.create(x, y, "gems", 0);
 
@@ -370,7 +370,7 @@ class playGame extends Phaser.Scene {
     if (isRecycled) {
       block.x = x;
       block.y = y;
-	  block.rowText.setText(block.row);
+      block.rowText.setText(block.row);
       block.text.setText(block.value);
       block.text.x = block.x;
       block.text.y = block.y;
@@ -391,7 +391,7 @@ class playGame extends Phaser.Scene {
       });
       text.setOrigin(0.5);
 
-	  let textRow = this.add.text(block.x - 20, block.y + 20, block.row, {
+      let textRow = this.add.text(block.x - 20, block.y + 20, block.row, {
         font: "bold 24px Arial",
         align: "center",
         color: "#000000"
@@ -401,7 +401,7 @@ class playGame extends Phaser.Scene {
 
       // text object is stored as a block custom property
       block.text = text;
-	  block.rowText = textRow;
+      block.rowText = textRow;
       /*
       let text2 = this.add.text(block.x-15, block.y+15, block.row, {
         font: "bold 28px Arial",
@@ -504,7 +504,7 @@ class playGame extends Phaser.Scene {
       this.trajectory.x = ballX;
       this.trajectory.y = ballY;
 
-      
+
     }
   }
 
@@ -568,12 +568,12 @@ class playGame extends Phaser.Scene {
         let angleOfFire = Phaser.Math.DegToRad(this.trajectory.angle - 90);
 
         // iterate through all balls
-        this.ballGroup.getChildren().forEach(function(ball, index) {
+        this.ballGroup.getChildren().forEach(function (ball, index) {
 
           // add a timer event which fires a ball every 0.1 seconds
           this.time.addEvent({
             delay: 100 * index,
-            callback: function() {
+            callback: function () {
 
               // set ball velocity
               ball.body.setVelocity(gameOptions.ballSpeed * Math.cos(angleOfFire), gameOptions.ballSpeed * Math.sin(angleOfFire));
@@ -658,10 +658,10 @@ class playGame extends Phaser.Scene {
         if (this.specialArray.length > 0) {
           this.spawnSpecials();
         }
-        if(this.level % 10 == 0){
+        if (this.level % 10 == 0) {
           this.changeBG();
         }
-        
+
         // move the blocks
         this.moveBlocks();
 
@@ -705,7 +705,7 @@ class playGame extends Phaser.Scene {
         y: {
 
           // each block is moved down from its position by its display height
-          getEnd: function(target) {
+          getEnd: function (target) {
             return target.y + target.displayHeight;
           }
         },
@@ -715,15 +715,15 @@ class playGame extends Phaser.Scene {
       callbackScope: this,
 
       // each time the tween updates...
-      onUpdate: function(tween, target) {
+      onUpdate: function (tween, target) {
 
         // tween down the value text too
         target.text.y = target.y;
-		target.rowText.y = target.y + 20;
+        target.rowText.y = target.y + 20;
       },
 
       // once the tween completes...
-      onComplete: function() {
+      onComplete: function () {
         if (this.starPlaced) {
           this.moveStar();
         }
@@ -731,11 +731,11 @@ class playGame extends Phaser.Scene {
         gameState = WAITING_FOR_PLAYER_INPUT;
 
         // execute an action on all blocks
-        Phaser.Actions.Call(this.blockGroup.getChildren(), function(block) {
+        Phaser.Actions.Call(this.blockGroup.getChildren(), function (block) {
 
           // update row custom property
           block.row++;
-		  block.rowText.setText(block.row)
+          block.rowText.setText(block.row)
           if (block.isToggle) {
             if (block.state == 'open') {
               block.state = 'closed';
@@ -770,12 +770,12 @@ class playGame extends Phaser.Scene {
           // ...restart the game
           //this.scene.start("UI");
           //this.scene.start("PlayGame");
-                    // fade to black
+          // fade to black
           this.cameras.main.fadeOut(1000, 0, 0, 0)
           this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, (cam, effect) => {
             this.scene.pause("UI");
             this.scene.pause("PlayGame");
-            this.scene.launch("endGame", { outcome: 'lose', level: this.level  });
+            this.scene.launch("endGame", { outcome: 'lose', level: this.level });
 
           })
         }
@@ -808,7 +808,7 @@ class playGame extends Phaser.Scene {
         y: {
 
           // each block is moved down from its position by its display height
-          getEnd: function(target) {
+          getEnd: function (target) {
             return target.y + target.displayHeight;
           }
         },
@@ -818,10 +818,10 @@ class playGame extends Phaser.Scene {
       callbackScope: this,
 
       // once the tween completes...
-      onComplete: function() {
+      onComplete: function () {
 
         // execute an action on all blocks
-        Phaser.Actions.Call(this.specialGroup.getChildren(), function(special) {
+        Phaser.Actions.Call(this.specialGroup.getChildren(), function (special) {
           // update row custom property
           special.row++;
           if (special.hit || special.row == gameOptions.blockLines - 1) {
@@ -882,7 +882,7 @@ class playGame extends Phaser.Scene {
         y: {
 
           // each block is moved down from its position by its display height
-          getEnd: function(target) {
+          getEnd: function (target) {
             return target.y - target.displayHeight;
           }
         },
@@ -892,21 +892,21 @@ class playGame extends Phaser.Scene {
       callbackScope: this,
 
       // each time the tween updates...
-      onUpdate: function(tween, target) {
+      onUpdate: function (tween, target) {
         this.removeBlockLine(2)
         // tween down the value text too
         target.text.y = target.y;
-		target.rowText.y = target.y + 20;
+        target.rowText.y = target.y + 20;
       },
 
       // once the tween completes...
-      onComplete: function() {
+      onComplete: function () {
 
         // wait for player input again
         //this.gameState = WAITING_FOR_PLAYER_INPUT;
 
         // execute an action on all blocks
-        Phaser.Actions.Call(this.blockGroup.getChildren(), function(block) {
+        Phaser.Actions.Call(this.blockGroup.getChildren(), function (block) {
 
           // update row custom property
           block.row--;
@@ -942,7 +942,7 @@ class playGame extends Phaser.Scene {
     });
   }
   removeBlockLine(line) {
-    Phaser.Actions.Call(this.blockGroup.getChildren(), function(block) {
+    Phaser.Actions.Call(this.blockGroup.getChildren(), function (block) {
 
       // if a block reached the bottom of the game area...
       if (block.row == line) {
@@ -986,7 +986,7 @@ class playGame extends Phaser.Scene {
   moveExtraBalls() {
 
     // execute an action on all extra balls
-    Phaser.Actions.Call(this.extraBallGroup.getChildren(), function(ball) {
+    Phaser.Actions.Call(this.extraBallGroup.getChildren(), function (ball) {
 
       // if a ball reached the bottom of the game field...
       if (ball.row == gameOptions.blockLines) {
@@ -1008,7 +1008,7 @@ class playGame extends Phaser.Scene {
         // x property
         x: {
 
-          getEnd: function(target) {
+          getEnd: function (target) {
 
             // is the ball marked as collected?
             if (target.collected) {
@@ -1024,7 +1024,7 @@ class playGame extends Phaser.Scene {
 
         // same thing with y position
         y: {
-          getEnd: function(target) {
+          getEnd: function (target) {
             if (target.collected) {
               return target.scene.firstBallToLand.gameObject.y;
             }
@@ -1037,10 +1037,10 @@ class playGame extends Phaser.Scene {
       callbackScope: this,
 
       // once the tween completes...
-      onComplete: function() {
+      onComplete: function () {
 
         // execute an action on all extra balls
-        Phaser.Actions.Call(this.extraBallGroup.getChildren(), function(ball) {
+        Phaser.Actions.Call(this.extraBallGroup.getChildren(), function (ball) {
 
           // if the ball is not collected...
           if (!ball.collected) {
@@ -1079,7 +1079,7 @@ class playGame extends Phaser.Scene {
 
 
     // check collision between ballGroup and blockGroup members
-    this.physics.world.collide(this.ballGroup, this.blockGroup, function(ball, block) {
+    this.physics.world.collide(this.ballGroup, this.blockGroup, function (ball, block) {
 
       // decrease block value
       if (block.state == 'open') {
@@ -1128,7 +1128,7 @@ class playGame extends Phaser.Scene {
     }, null, this);
   }
   decreaseRow(row) {
-    Phaser.Actions.Call(this.blockGroup.getChildren(), function(block) {
+    Phaser.Actions.Call(this.blockGroup.getChildren(), function (block) {
       if (block.row == row) {
         // decrease block value
         if (block.state == 'open') {
@@ -1174,7 +1174,7 @@ class playGame extends Phaser.Scene {
     }, this);
   }
   decreaseCol(col) {
-    Phaser.Actions.Call(this.blockGroup.getChildren(), function(block) {
+    Phaser.Actions.Call(this.blockGroup.getChildren(), function (block) {
       if (block.col == col) {
         // decrease block value
         if (block.state == 'open') {
@@ -1223,7 +1223,7 @@ class playGame extends Phaser.Scene {
   handleBallVsExtra() {
 
     // check overlap between ballGroup and extraBallGroup members
-    this.physics.world.overlap(this.ballGroup, this.extraBallGroup, function(ball, extraBall) {
+    this.physics.world.overlap(this.ballGroup, this.extraBallGroup, function (ball, extraBall) {
 
       // set extra ball as collected
       extraBall.collected = true;
@@ -1246,7 +1246,7 @@ class playGame extends Phaser.Scene {
     }, null, this);
   }
   handleBallVsStar() {
-    this.physics.world.overlap(this.ballGroup, this.star, function(ball, star) {
+    this.physics.world.overlap(this.ballGroup, this.star, function (ball, star) {
       this.star.body.enable = false;
       this.starPlaced = false
       this.starCount++
@@ -1269,7 +1269,7 @@ class playGame extends Phaser.Scene {
     }, null, this);
   }
   handleBallVsSpecial() {
-    this.physics.world.overlap(this.ballGroup, this.specialGroup, function(ball, special) {
+    this.physics.world.overlap(this.ballGroup, this.specialGroup, function (ball, special) {
       special.hit = true;
       if (special.type == 9) {
         if (this.mark == 0) {
@@ -1335,29 +1335,29 @@ class playGame extends Phaser.Scene {
   }
 }
 
-var runRaycaster = function(raycaster, x, y, angle, debugGraphics) {
+var runRaycaster = function (raycaster, x, y, angle, debugGraphics) {
   debugGraphics
-      .clear()
-      .fillStyle(0xC4C400)
-      .fillCircle(x, y, 10);
+    .clear()
+    .fillStyle(0xC4C400)
+    .fillCircle(x, y, 10);
 
   const MaxRaycasterCount = 1000;
   for (var i = 0; i < MaxRaycasterCount; i++) {
-      var result = raycaster.rayToward(x, y, angle);
+    var result = raycaster.rayToward(x, y, angle);
+    debugGraphics
+      .lineStyle(2, 0x840000)
+      .strokeLineShape(raycaster.ray);
+
+    if (result) {
       debugGraphics
-          .lineStyle(2, 0x840000)
-          .strokeLineShape(raycaster.ray);
+        .fillStyle(0xff0000)
+        .fillPoint(result.x, result.y, 4)
 
-      if (result) {
-          debugGraphics
-              .fillStyle(0xff0000)
-              .fillPoint(result.x, result.y, 4)
-
-          x = result.x;
-          y = result.y;
-          angle = result.reflectAngle;
-      } else {
-          break;
-      }
+      x = result.x;
+      y = result.y;
+      angle = result.reflectAngle;
+    } else {
+      break;
+    }
   }
 }
