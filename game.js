@@ -1,6 +1,6 @@
 let game;
 
-window.onload = function () {
+window.onload = function() {
   let gameConfig = {
     type: Phaser.AUTO,
     backgroundColor: 0x000000,
@@ -89,7 +89,7 @@ class playGame extends Phaser.Scene {
     this.gameOver = false;
 
     this.level = 0;
-
+    this.drop = false;
     this.specialArray = [];
     this.recycledBlocks = [];
     this.recycledSpecials = [];
@@ -165,7 +165,8 @@ class playGame extends Phaser.Scene {
     } else {
       this.addBlockLine(gameOptions.numLinesStart);
     }
-
+    this.dropButton = this.add.image(835, game.config.height - (scorePanel.displayHeight + 65), 'panel').setInteractive().setAlpha(0)
+    this.dropButton.on('pointerdown', this.dropBalls, this)
 
     // input listeners
     this.input.on("pointerdown", this.startAiming, this);
@@ -175,25 +176,25 @@ class playGame extends Phaser.Scene {
 
     var UI = this.scene.get('UI');
 
-    UI.events.on('bounce', function () {
+    UI.events.on('bounce', function() {
       this.bouncePU = true
       this.bottomPanel.setTint(0x27ae61)
 
     }, this);
 
-    UI.events.on('double', function () {
+    UI.events.on('double', function() {
       this.doublePU = true;
       //fc6603
       this.ballGroup.setTint(0xfc6603);
     }, this);
 
-    UI.events.on('bomb', function () {
+    UI.events.on('bomb', function() {
       this.bombPU = true;
       //fc6603
       this.ballGroup.setTint(0xff0000);
     }, this);
 
-    UI.events.on('up', function () {
+    UI.events.on('up', function() {
       this.moveBlocksUp();
 
     }, this);
@@ -211,7 +212,14 @@ class playGame extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(bgColors[bgc]);
     this.colorText.setText(bgc)
   }
-
+  dropBalls() {
+    if (gameState == BALLS_ARE_RUNNING) {
+      Phaser.Actions.Call(this.ballGroup.getChildren(), function(ball) {
+        ball.setAlpha(.2)
+        this.drop = true
+      }, this);
+    }
+  }
   // method to add the ball at a given position x, y. The third argument tells us if it's an extra ball
   addBall(x, y, isExtraBall, r) {
 
@@ -568,12 +576,12 @@ class playGame extends Phaser.Scene {
         let angleOfFire = Phaser.Math.DegToRad(this.trajectory.angle - 90);
 
         // iterate through all balls
-        this.ballGroup.getChildren().forEach(function (ball, index) {
+        this.ballGroup.getChildren().forEach(function(ball, index) {
 
           // add a timer event which fires a ball every 0.1 seconds
           this.time.addEvent({
             delay: 100 * index,
-            callback: function () {
+            callback: function() {
 
               // set ball velocity
               ball.body.setVelocity(gameOptions.ballSpeed * Math.cos(angleOfFire), gameOptions.ballSpeed * Math.sin(angleOfFire));
@@ -637,6 +645,8 @@ class playGame extends Phaser.Scene {
 
         // time to prepare for next move
         gameState = PREPARING_FOR_NEXT_MOVE;
+        
+        this.dropButton.setAlpha(0)
         if (blockCount == 0 && gameMode == 'puzzle') {
           // ...restart the game
 
@@ -654,6 +664,7 @@ class playGame extends Phaser.Scene {
 
 
         }
+        this.drop = false
         this.bombPU = false;
         if (this.specialArray.length > 0) {
           this.spawnSpecials();
@@ -675,12 +686,15 @@ class playGame extends Phaser.Scene {
 
     // if balls are running...
     if (gameState == BALLS_ARE_RUNNING) {
-
+      this.dropButton.setAlpha(.5)
       // handle collisions between balls and blocks
-      this.handleBallVsBlock();
-
+      if(!this.drop){
+       this.handleBallVsBlock();
+      }
       // handle collisions between ball and extra balls
+      
       this.handleBallVsExtra();
+      
 
       if (this.starPlaced) {
         this.handleBallVsStar();
@@ -705,7 +719,7 @@ class playGame extends Phaser.Scene {
         y: {
 
           // each block is moved down from its position by its display height
-          getEnd: function (target) {
+          getEnd: function(target) {
             return target.y + target.displayHeight;
           }
         },
@@ -715,7 +729,7 @@ class playGame extends Phaser.Scene {
       callbackScope: this,
 
       // each time the tween updates...
-      onUpdate: function (tween, target) {
+      onUpdate: function(tween, target) {
 
         // tween down the value text too
         target.text.y = target.y;
@@ -723,7 +737,7 @@ class playGame extends Phaser.Scene {
       },
 
       // once the tween completes...
-      onComplete: function () {
+      onComplete: function() {
         if (this.starPlaced) {
           this.moveStar();
         }
@@ -731,7 +745,7 @@ class playGame extends Phaser.Scene {
         gameState = WAITING_FOR_PLAYER_INPUT;
 
         // execute an action on all blocks
-        Phaser.Actions.Call(this.blockGroup.getChildren(), function (block) {
+        Phaser.Actions.Call(this.blockGroup.getChildren(), function(block) {
 
           // update row custom property
           block.row++;
@@ -808,7 +822,7 @@ class playGame extends Phaser.Scene {
         y: {
 
           // each block is moved down from its position by its display height
-          getEnd: function (target) {
+          getEnd: function(target) {
             return target.y + target.displayHeight;
           }
         },
@@ -818,10 +832,10 @@ class playGame extends Phaser.Scene {
       callbackScope: this,
 
       // once the tween completes...
-      onComplete: function () {
+      onComplete: function() {
 
         // execute an action on all blocks
-        Phaser.Actions.Call(this.specialGroup.getChildren(), function (special) {
+        Phaser.Actions.Call(this.specialGroup.getChildren(), function(special) {
           // update row custom property
           special.row++;
           if (special.hit || special.row == gameOptions.blockLines - 1) {
@@ -882,7 +896,7 @@ class playGame extends Phaser.Scene {
         y: {
 
           // each block is moved down from its position by its display height
-          getEnd: function (target) {
+          getEnd: function(target) {
             return target.y - target.displayHeight;
           }
         },
@@ -892,7 +906,7 @@ class playGame extends Phaser.Scene {
       callbackScope: this,
 
       // each time the tween updates...
-      onUpdate: function (tween, target) {
+      onUpdate: function(tween, target) {
         this.removeBlockLine(2)
         // tween down the value text too
         target.text.y = target.y;
@@ -900,13 +914,13 @@ class playGame extends Phaser.Scene {
       },
 
       // once the tween completes...
-      onComplete: function () {
+      onComplete: function() {
 
         // wait for player input again
         //this.gameState = WAITING_FOR_PLAYER_INPUT;
 
         // execute an action on all blocks
-        Phaser.Actions.Call(this.blockGroup.getChildren(), function (block) {
+        Phaser.Actions.Call(this.blockGroup.getChildren(), function(block) {
 
           // update row custom property
           block.row--;
@@ -942,7 +956,7 @@ class playGame extends Phaser.Scene {
     });
   }
   removeBlockLine(line) {
-    Phaser.Actions.Call(this.blockGroup.getChildren(), function (block) {
+    Phaser.Actions.Call(this.blockGroup.getChildren(), function(block) {
 
       // if a block reached the bottom of the game area...
       if (block.row == line) {
@@ -973,7 +987,7 @@ class playGame extends Phaser.Scene {
 
       // set x to match the horizontal position of the first landed ball
       x: this.firstBallToLand.gameObject.x,
-
+      alpha: 1,
       // tween duration, 1/2 second
       duration: 500,
 
@@ -986,7 +1000,7 @@ class playGame extends Phaser.Scene {
   moveExtraBalls() {
 
     // execute an action on all extra balls
-    Phaser.Actions.Call(this.extraBallGroup.getChildren(), function (ball) {
+    Phaser.Actions.Call(this.extraBallGroup.getChildren(), function(ball) {
 
       // if a ball reached the bottom of the game field...
       if (ball.row == gameOptions.blockLines) {
@@ -1008,7 +1022,7 @@ class playGame extends Phaser.Scene {
         // x property
         x: {
 
-          getEnd: function (target) {
+          getEnd: function(target) {
 
             // is the ball marked as collected?
             if (target.collected) {
@@ -1024,7 +1038,7 @@ class playGame extends Phaser.Scene {
 
         // same thing with y position
         y: {
-          getEnd: function (target) {
+          getEnd: function(target) {
             if (target.collected) {
               return target.scene.firstBallToLand.gameObject.y;
             }
@@ -1037,10 +1051,10 @@ class playGame extends Phaser.Scene {
       callbackScope: this,
 
       // once the tween completes...
-      onComplete: function () {
+      onComplete: function() {
 
         // execute an action on all extra balls
-        Phaser.Actions.Call(this.extraBallGroup.getChildren(), function (ball) {
+        Phaser.Actions.Call(this.extraBallGroup.getChildren(), function(ball) {
 
           // if the ball is not collected...
           if (!ball.collected) {
@@ -1079,7 +1093,7 @@ class playGame extends Phaser.Scene {
 
 
     // check collision between ballGroup and blockGroup members
-    this.physics.world.collide(this.ballGroup, this.blockGroup, function (ball, block) {
+    this.physics.world.collide(this.ballGroup, this.blockGroup, function(ball, block) {
 
       // decrease block value
       if (block.state == 'open') {
@@ -1128,7 +1142,7 @@ class playGame extends Phaser.Scene {
     }, null, this);
   }
   decreaseRow(row) {
-    Phaser.Actions.Call(this.blockGroup.getChildren(), function (block) {
+    Phaser.Actions.Call(this.blockGroup.getChildren(), function(block) {
       if (block.row == row) {
         // decrease block value
         if (block.state == 'open') {
@@ -1174,7 +1188,7 @@ class playGame extends Phaser.Scene {
     }, this);
   }
   decreaseCol(col) {
-    Phaser.Actions.Call(this.blockGroup.getChildren(), function (block) {
+    Phaser.Actions.Call(this.blockGroup.getChildren(), function(block) {
       if (block.col == col) {
         // decrease block value
         if (block.state == 'open') {
@@ -1223,7 +1237,7 @@ class playGame extends Phaser.Scene {
   handleBallVsExtra() {
 
     // check overlap between ballGroup and extraBallGroup members
-    this.physics.world.overlap(this.ballGroup, this.extraBallGroup, function (ball, extraBall) {
+    this.physics.world.overlap(this.ballGroup, this.extraBallGroup, function(ball, extraBall) {
 
       // set extra ball as collected
       extraBall.collected = true;
@@ -1246,7 +1260,7 @@ class playGame extends Phaser.Scene {
     }, null, this);
   }
   handleBallVsStar() {
-    this.physics.world.overlap(this.ballGroup, this.star, function (ball, star) {
+    this.physics.world.overlap(this.ballGroup, this.star, function(ball, star) {
       this.star.body.enable = false;
       this.starPlaced = false
       this.starCount++
@@ -1269,7 +1283,7 @@ class playGame extends Phaser.Scene {
     }, null, this);
   }
   handleBallVsSpecial() {
-    this.physics.world.overlap(this.ballGroup, this.specialGroup, function (ball, special) {
+    this.physics.world.overlap(this.ballGroup, this.specialGroup, function(ball, special) {
       special.hit = true;
       if (special.type == 9) {
         if (this.mark == 0) {
@@ -1335,7 +1349,7 @@ class playGame extends Phaser.Scene {
   }
 }
 
-var runRaycaster = function (raycaster, x, y, angle, debugGraphics) {
+var runRaycaster = function(raycaster, x, y, angle, debugGraphics) {
   debugGraphics
     .clear()
     .fillStyle(0xC4C400)
