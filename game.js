@@ -356,7 +356,7 @@ class playGame extends Phaser.Scene {
   // method to add a block at a given x,y position. The third argument tells us if the block is recycled
   addBlock(x, y, r, c, isRecycled, color, val) {
     blockCount++;
-    if (val > 1) {
+    if (val > 0) {
       var blockValue = val;
     } else {
       var blockValue = gameOptions.startingValue;
