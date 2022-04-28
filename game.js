@@ -315,13 +315,13 @@ class playGame extends Phaser.Scene {
             if (this.recycledBlocks.length == 0) {
 
               // add a block
-              this.addBlock(blockPosition * this.blockSize + this.blockSize / 2, this.emptySpace / 2 + (this.blockSize * .5) + r * this.blockSize, r, blockPosition, false, color, 1);
+              this.addBlock(blockPosition * this.blockSize + this.blockSize / 2, this.emptySpace / 2 + (this.blockSize * .5) + r * this.blockSize, r, blockPosition, false, color, 0);
 
             }
             else {
 
               // recycle a block
-              this.addBlock(blockPosition * this.blockSize + this.blockSize / 2, this.emptySpace / 2 + (this.blockSize * .5) + r * this.blockSize, r, blockPosition, true, color, 1);
+              this.addBlock(blockPosition * this.blockSize + this.blockSize / 2, this.emptySpace / 2 + (this.blockSize * .5) + r * this.blockSize, r, blockPosition, true, color, 0);
 
               //this.addBlock(blockPosition * this.blockSize + this.blockSize / 2, this.blockSize / 2 + this.emptySpace / 2, r,true)
             }
