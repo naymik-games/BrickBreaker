@@ -217,7 +217,8 @@ class playGame extends Phaser.Scene {
       this.drop = true
       Phaser.Actions.Call(this.ballGroup.getChildren(), function (ball) {
         ball.setAlpha(.5)
-        //ball.body.setVelocity(0, 900)
+        ball.body.velocityX += 25
+        ball.body.velocityY += 125
 
       }, this);
     }
@@ -692,16 +693,17 @@ class playGame extends Phaser.Scene {
       // handle collisions between balls and blocks
       if (!this.drop) {
         this.handleBallVsBlock();
+
+        // handle collisions between ball and extra balls
+
+        this.handleBallVsExtra();
+
+
+        if (this.starPlaced) {
+          this.handleBallVsStar();
+        }
+        this.handleBallVsSpecial();
       }
-      // handle collisions between ball and extra balls
-
-      this.handleBallVsExtra();
-
-
-      if (this.starPlaced) {
-        this.handleBallVsStar();
-      }
-      this.handleBallVsSpecial();
     }
   }
 
