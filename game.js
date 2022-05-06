@@ -217,8 +217,7 @@ class playGame extends Phaser.Scene {
       this.drop = true
       Phaser.Actions.Call(this.ballGroup.getChildren(), function (ball) {
         ball.setAlpha(.5)
-        ball.body.velocityX += 25
-        ball.body.velocityY += 125
+        ball.setVelocity(500, 1000);
 
       }, this);
     }
@@ -1264,7 +1263,7 @@ class playGame extends Phaser.Scene {
     }, null, this);
   }
   handleBallVsStar() {
-    this.physics.world.collide(this.ballGroup, this.star, function (ball, star) {
+    this.physics.world.overlap(this.ballGroup, this.star, function (ball, star) {
       this.star.body.enable = false;
       this.starPlaced = false
       this.starCount++
