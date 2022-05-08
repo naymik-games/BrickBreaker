@@ -109,7 +109,7 @@ class endGame extends Phaser.Scene {
 		}
 	}
 	saveSettings() {
-		localStorage.setItem('ballzPuzzleData', JSON.stringify(gameData));
+		localStorage.setItem('ballzPuzzleDatav1', JSON.stringify(gameData));
 	}
 
 }

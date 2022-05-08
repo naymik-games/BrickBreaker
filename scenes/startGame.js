@@ -6,12 +6,20 @@ class startGame extends Phaser.Scene {
 
 	}
 	create() {
-		gameData = JSON.parse(localStorage.getItem('ballzPuzzleData'));
+		gameData = JSON.parse(localStorage.getItem('ballzPuzzleDatav1'));
 
 		if (gameData === null || gameData.length <= 0) {
-			localStorage.setItem('ballzPuzzleData',
+			localStorage.setItem('ballzPuzzleDatav1',
 				JSON.stringify(defaultData));
 			gameData = defaultData;
+		}
+		if (gameData.levelStatus.length < rounds.length) {
+			var count = rounds.length - gameData.levelStatus.length
+			for (let i = 0; i < count; i++) {
+				gameData.levelStatus.push(0)
+
+			}
+			localStorage.setItem('ballzPuzzleDatav1', JSON.stringify(gameData));
 		}
 		//this.scene.start("PlayGame");
 		//this.scene.start("UI");

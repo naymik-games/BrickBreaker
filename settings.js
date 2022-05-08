@@ -79,5 +79,5 @@ gameState = WAITING_FOR_PLAYER_INPUT;
 
 gameMode = 'normal';
 let gameData = {};
-let defaultData = { last: 0, best: 0, lastEasy: 0, bestEasy: 0, onRound: 0, levelStatus: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
+let defaultData = { last: 0, best: 0, lastEasy: 0, bestEasy: 0, onRound: 0, levelStatus: [1, 0, 0] }
 let round = 0;

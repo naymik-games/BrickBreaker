@@ -217,8 +217,8 @@ class playGame extends Phaser.Scene {
       this.drop = true
       Phaser.Actions.Call(this.ballGroup.getChildren(), function (ball) {
         ball.setAlpha(.5)
-        ball.setVelocity(500, 1000);
-
+        //ball.setVelocity(500, 1000);
+        ball.body.velocity.normalize().scale(2000);
       }, this);
     }
   }
@@ -1264,25 +1264,27 @@ class playGame extends Phaser.Scene {
   }
   handleBallVsStar() {
     this.physics.world.overlap(this.ballGroup, this.star, function (ball, star) {
-      this.star.body.enable = false;
-      this.starPlaced = false
-      this.starCount++
-      this.events.emit('star', { star: this.starCount });
-      // add a tween to move the ball down
-      this.tweens.add({
+      if (this.starPlaced) {
+        this.star.body.enable = false;
+        this.starPlaced = false
+        this.starCount++
+        this.events.emit('star', { star: this.starCount });
+        // add a tween to move the ball down
+        this.tweens.add({
 
-        // the target is the extra ball
-        targets: this.star,
+          // the target is the extra ball
+          targets: this.star,
 
-        // y destination position is the very bottom of game area
-        y: -100,
-        angle: 360,
-        // tween duration, 0.2 seconds
-        duration: 800,
+          // y destination position is the very bottom of game area
+          y: -100,
+          angle: 360,
+          // tween duration, 0.2 seconds
+          duration: 800,
 
-        // tween easing
-        ease: "Cubic.easeOut"
-      });
+          // tween easing
+          ease: "Cubic.easeOut"
+        });
+      }
     }, null, this);
   }
   handleBallVsSpecial() {
