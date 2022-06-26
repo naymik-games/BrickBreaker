@@ -447,10 +447,10 @@ class playGame extends Phaser.Scene {
     let stype = Phaser.Math.Between(7, 9);
     let special = isRecycled ? this.recycledSpecials.shift() : this.specialGroup.create(x, y, "gems", 7);
     // resize the block
-    special.displayWidth = this.blockSize;
-    special.displayHeight = this.blockSize;
+    special.displayWidth = this.blockSize * .75;
+    special.displayHeight = this.blockSize * .75;
     special.setFrame(stype);
-    special.setCircle(this.blockSize / 2);
+    special.setCircle(this.blockSize * .75);
     // custom property to save block value
 
     if (isRecycled) {
@@ -826,7 +826,7 @@ class playGame extends Phaser.Scene {
 
           // each block is moved down from its position by its display height
           getEnd: function (target) {
-            return target.y + target.displayHeight;
+            return target.y + (target.displayHeight * 1.25);
           }
         },
       },
@@ -1118,7 +1118,7 @@ class playGame extends Phaser.Scene {
         blockCount--;
         this.destroyBlockTween(block.x, block.y)
         var num = Phaser.Math.Between(0, 100);
-        if (num < gameOptions.spawnSpecialProbability) {
+        if (num < gameOptions.spawnSpecialProbability && block.row < gameOptions.blockLines - 1) {
           var xy = { x: block.x, y: block.y, row: block.row, col: block.col };
           this.specialArray.push(xy);
         }
@@ -1292,10 +1292,10 @@ class playGame extends Phaser.Scene {
       special.hit = true;
       if (special.type == 9) {
         if (this.mark == 0) {
-          var vx = 501
+          var vx = 515
           this.mark = 1
         } else {
-          var vx = -498
+          var vx = -515
           this.mark = 0
         }
         ball.setVelocity(vx, -1000);

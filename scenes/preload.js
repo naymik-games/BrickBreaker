@@ -69,7 +69,7 @@ class preloadGame extends Phaser.Scene {
 
     }
     this.load.bitmapFont('lato', 'assets/fonts/lato_0.png', 'assets/fonts/lato.xml');
-
+    this.load.image("panel", "assets/sprites/blank.png");
 
     this.load.image("panel2", "assets/sprites/blank_2.png");
     //this.load.image("trajectory", "assets/sprites/trajectory.png");
