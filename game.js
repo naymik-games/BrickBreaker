@@ -33,7 +33,7 @@ class playGame extends Phaser.Scene {
   create() {
     this.cameras.main.fadeIn(800, 0, 0, 0);
 
-
+    this.predictive = true
 
     console.log(rounds[round])
     // {col: 10, row: 13, max: 7, startBalls: 5, startLines: 5, startValue: 5},
@@ -91,8 +91,10 @@ class playGame extends Phaser.Scene {
     this.level = 0;
     this.drop = false;
     this.specialArray = [];
+    this.puArray = [];
     this.recycledBlocks = [];
     this.recycledSpecials = [];
+    this.recycledPUs = [];
 
     this.blockSize = game.config.width / gameOptions.blocksPerLine;
     this.gameFieldHeight = this.blockSize * gameOptions.blockLines;
@@ -105,6 +107,7 @@ class playGame extends Phaser.Scene {
     this.ballGroup = this.physics.add.group();
     this.extraBallGroup = this.physics.add.group();
     this.specialGroup = this.physics.add.group();
+    this.puGroup = this.physics.add.group();
 
     let scorePanel = this.add.sprite(game.config.width / 2, 0, "panel");
     scorePanel.displayWidth = game.config.width;
@@ -455,7 +458,7 @@ class playGame extends Phaser.Scene {
     var tp = Phaser.Math.Between(0, 100);
     if (tp < gameOptions.toggleProbability && this.allowBlocked) {
       block.isToggle = true;
-      block.setFrame(15)
+      block.setFrame(17)
     }
     // block is immovable, does not react to collisions
     block.body.immovable = true;
@@ -494,6 +497,41 @@ class playGame extends Phaser.Scene {
     special.col = c;
     special.type = stype;
     special.hit = false;
+  }
+  spawnPU() {
+    for (var i = 0; i < this.puArray.length; i++) {
+      var pu = this.puArray.pop();
+      if (this.recycledPUs.length == 0) {
+        this.addPU(pu.x, pu.y, pu.row, pu.col, false);
+      } else {
+        this.addPU(pu.x, pu.y, pu.row, pu.col, true);
+      }
+    }
+  }
+  addPU(x, y, r, c, isRecycled) {
+    let putype = Phaser.Math.Between(10, 15);
+    let pu = isRecycled ? this.recycledPUs.shift() : this.puGroup.create(x, y, "gems", 10);
+    // resize the block
+    pu.displayWidth = this.blockSize * .75;
+    pu.displayHeight = this.blockSize * .75;
+    pu.setFrame(putype);
+    pu.setCircle((this.blockSize * .75) / 2);
+    // custom property to save block value
+
+    if (isRecycled) {
+      pu.x = x;
+      pu.y = y;
+
+
+      pu.setVisible(true);
+
+      this.puGroup.add(pu);
+    }
+    // custom property to save block row
+    pu.row = r;
+    pu.col = c;
+    pu.type = putype;
+    pu.hit = false;
   }
   // method to get the ball position
   getBallPosition() {
@@ -585,7 +623,10 @@ class playGame extends Phaser.Scene {
         //this.aimGraphics.clear()
 
         // show trajectory sprite
-        // this.trajectory.setVisible(true);
+        if (!this.predictive) {
+          this.trajectory.setVisible(true);
+        }
+
 
         // determine dragging direction
         this.direction = Phaser.Math.Angle.Between(e.x, e.y, e.downX, e.downY);
@@ -604,127 +645,127 @@ class playGame extends Phaser.Scene {
         } */
         // rotate trajectory sprite accordingly
         this.trajectory.angle = Phaser.Math.RadToDeg(this.direction) + 90;
+        if (this.predictive) {
 
+          ///////////////////
+          let trajectoryLength = 1600;
+          // get ball bounding box vertices
+          this.ballVertices = this.getBallVertices(this.getBallPosition());
 
-        ///////////////////
-        let trajectoryLength = 1600;
-        // get ball bounding box vertices
-        this.ballVertices = this.getBallVertices(this.getBallPosition());
+          // predictive trajectory loop
+          do {
 
-        // predictive trajectory loop
-        do {
+            // here we will store all collision information, starting from the distance, initally set as a very high number
+            let collisionObject = {
+              collisionDistance: 10000
+            }
 
-          // here we will store all collision information, starting from the distance, initally set as a very high number
-          let collisionObject = {
-            collisionDistance: 10000
-          }
+            // loop through all ball vertices
+            this.ballVertices.forEach(function (vertex, index) {
 
-          // loop through all ball vertices
-          this.ballVertices.forEach(function (vertex, index) {
+              // determine trajectory line
+              let trajectoryLine = new Phaser.Geom.Line(vertex.x, vertex.y, vertex.x + trajectoryLength * Math.cos(trajectoryDirection), vertex.y + trajectoryLength * Math.sin(trajectoryDirection));
 
-            // determine trajectory line
-            let trajectoryLine = new Phaser.Geom.Line(vertex.x, vertex.y, vertex.x + trajectoryLength * Math.cos(trajectoryDirection), vertex.y + trajectoryLength * Math.sin(trajectoryDirection));
+              // iterate through all field segments
+              Phaser.Actions.Call(this.fieldSegments, function (line) {
 
-            // iterate through all field segments
-            Phaser.Actions.Call(this.fieldSegments, function (line) {
+                // create a new temp point outside game field
+                let intersectionPoint = new Phaser.Geom.Point(-1, -1);
 
-              // create a new temp point outside game field
-              let intersectionPoint = new Phaser.Geom.Point(-1, -1);
+                // assign temp point the valie of the intersection point between trajectory and polygon line, if any
+                Phaser.Geom.Intersects.LineToLine(trajectoryLine, line, intersectionPoint);
 
-              // assign temp point the valie of the intersection point between trajectory and polygon line, if any
-              Phaser.Geom.Intersects.LineToLine(trajectoryLine, line, intersectionPoint);
+                // if the intersection point is inside the field...
+                if (intersectionPoint.x != -1) {
 
-              // if the intersection point is inside the field...
-              if (intersectionPoint.x != -1) {
+                  // determine distance between intersection point and vertex
+                  let distance = Phaser.Math.Distance.BetweenPoints(intersectionPoint, vertex);
 
-                // determine distance between intersection point and vertex
-                let distance = Phaser.Math.Distance.BetweenPoints(intersectionPoint, vertex);
+                  // if the distance is less than current collision object distance, but greater than 1, to avoid collision with the line we just checked...
+                  if (distance < collisionObject.collisionDistance && distance > 1) {
 
-                // if the distance is less than current collision object distance, but greater than 1, to avoid collision with the line we just checked...
-                if (distance < collisionObject.collisionDistance && distance > 1) {
+                    // update collision object distance
+                    collisionObject.collisionDistance = distance;
 
-                  // update collision object distance
-                  collisionObject.collisionDistance = distance;
+                    // save collision point
+                    collisionObject.collisionPoint = new Phaser.Geom.Point(intersectionPoint.x, intersectionPoint.y);
 
-                  // save collision point
-                  collisionObject.collisionPoint = new Phaser.Geom.Point(intersectionPoint.x, intersectionPoint.y);
+                    // save collision angle
+                    collisionObject.collisionAngle = Phaser.Geom.Line.Angle(line);
 
-                  // save collision angle
-                  collisionObject.collisionAngle = Phaser.Geom.Line.Angle(line);
+                    // save collision line
+                    collisionObject.collisionLine = Phaser.Geom.Line.Clone(line);
 
-                  // save collision line
-                  collisionObject.collisionLine = Phaser.Geom.Line.Clone(line);
-
-                  // save vertex index
-                  collisionObject.vertexIndex = index;
+                    // save vertex index
+                    collisionObject.vertexIndex = index;
+                  }
                 }
+              }, this);
+            }.bind(this));
+
+            // if there was a collision point...
+            if (collisionObject.collisionPoint) {
+              // draw a line between the vertex and the collision point
+              this.trajectoryGraphics.lineBetween(this.ballVertices[collisionObject.vertexIndex].x, this.ballVertices[collisionObject.vertexIndex].y, collisionObject.collisionPoint.x, collisionObject.collisionPoint.y);
+
+              // set trajectoryGraphics fill style
+              this.trajectoryGraphics.fillStyle(0xff0000, 0.5);
+
+              // squareOrigin will contain the center of the ball, given the collision point
+              let squareOrigin = new Phaser.Geom.Point();
+
+              // different actions to do according to vertex index
+              switch (collisionObject.vertexIndex) {
+
+                // top left
+                case 0:
+                  this.trajectoryGraphics.fillRect(collisionObject.collisionPoint.x, collisionObject.collisionPoint.y, this.ballSize, this.ballSize);
+                  squareOrigin.x = collisionObject.collisionPoint.x + this.ballSize / 2;
+                  squareOrigin.y = collisionObject.collisionPoint.y + this.ballSize / 2;
+                  break;
+
+                // top right
+                case 1:
+                  this.trajectoryGraphics.fillRect(collisionObject.collisionPoint.x - this.ballSize, collisionObject.collisionPoint.y, this.ballSize, this.ballSize);
+                  squareOrigin.x = collisionObject.collisionPoint.x - this.ballSize / 2;
+                  squareOrigin.y = collisionObject.collisionPoint.y + this.ballSize / 2;
+                  break;
+
+                // bottom right
+                case 2:
+                  this.trajectoryGraphics.fillRect(collisionObject.collisionPoint.x - this.ballSize, collisionObject.collisionPoint.y - this.ballSize, this.ballSize, this.ballSize);
+                  squareOrigin.x = collisionObject.collisionPoint.x - this.ballSize / 2;
+                  squareOrigin.y = collisionObject.collisionPoint.y - this.ballSize / 2;
+                  break;
+
+                // bottom left
+                case 3:
+                  this.trajectoryGraphics.fillRect(collisionObject.collisionPoint.x, collisionObject.collisionPoint.y - this.ballSize, this.ballSize, this.ballSize);
+                  squareOrigin.x = collisionObject.collisionPoint.x + this.ballSize / 2;
+                  squareOrigin.y = collisionObject.collisionPoint.y - this.ballSize / 2;
+                  break;
               }
-            }, this);
-          }.bind(this));
 
-          // if there was a collision point...
-          if (collisionObject.collisionPoint) {
-            // draw a line between the vertex and the collision point
-            this.trajectoryGraphics.lineBetween(this.ballVertices[collisionObject.vertexIndex].x, this.ballVertices[collisionObject.vertexIndex].y, collisionObject.collisionPoint.x, collisionObject.collisionPoint.y);
+              // determine  new trajectory direction according to surface angle
+              if (Phaser.Math.RadToDeg(collisionObject.collisionAngle) % 180 == 0) {
+                trajectoryDirection = 2 * Math.PI - trajectoryDirection;
+              }
+              else {
+                trajectoryDirection = Math.PI - trajectoryDirection;
+              }
+              trajectoryDirection = Phaser.Math.Angle.Wrap(trajectoryDirection);
 
-            // set trajectoryGraphics fill style
-            this.trajectoryGraphics.fillStyle(0xff0000, 0.5);
-
-            // squareOrigin will contain the center of the ball, given the collision point
-            let squareOrigin = new Phaser.Geom.Point();
-
-            // different actions to do according to vertex index
-            switch (collisionObject.vertexIndex) {
-
-              // top left
-              case 0:
-                this.trajectoryGraphics.fillRect(collisionObject.collisionPoint.x, collisionObject.collisionPoint.y, this.ballSize, this.ballSize);
-                squareOrigin.x = collisionObject.collisionPoint.x + this.ballSize / 2;
-                squareOrigin.y = collisionObject.collisionPoint.y + this.ballSize / 2;
-                break;
-
-              // top right
-              case 1:
-                this.trajectoryGraphics.fillRect(collisionObject.collisionPoint.x - this.ballSize, collisionObject.collisionPoint.y, this.ballSize, this.ballSize);
-                squareOrigin.x = collisionObject.collisionPoint.x - this.ballSize / 2;
-                squareOrigin.y = collisionObject.collisionPoint.y + this.ballSize / 2;
-                break;
-
-              // bottom right
-              case 2:
-                this.trajectoryGraphics.fillRect(collisionObject.collisionPoint.x - this.ballSize, collisionObject.collisionPoint.y - this.ballSize, this.ballSize, this.ballSize);
-                squareOrigin.x = collisionObject.collisionPoint.x - this.ballSize / 2;
-                squareOrigin.y = collisionObject.collisionPoint.y - this.ballSize / 2;
-                break;
-
-              // bottom left
-              case 3:
-                this.trajectoryGraphics.fillRect(collisionObject.collisionPoint.x, collisionObject.collisionPoint.y - this.ballSize, this.ballSize, this.ballSize);
-                squareOrigin.x = collisionObject.collisionPoint.x + this.ballSize / 2;
-                squareOrigin.y = collisionObject.collisionPoint.y - this.ballSize / 2;
-                break;
+              // determine new ball vertices
+              this.ballVertices = this.getBallVertices(squareOrigin);
             }
 
-            // determine  new trajectory direction according to surface angle
-            if (Phaser.Math.RadToDeg(collisionObject.collisionAngle) % 180 == 0) {
-              trajectoryDirection = 2 * Math.PI - trajectoryDirection;
-            }
-            else {
-              trajectoryDirection = Math.PI - trajectoryDirection;
-            }
-            trajectoryDirection = Phaser.Math.Angle.Wrap(trajectoryDirection);
+            // calculate the lenght of the remaining trajectory
+            trajectoryLength -= collisionObject.collisionDistance;
 
-            // determine new ball vertices
-            this.ballVertices = this.getBallVertices(squareOrigin);
-          }
+            // keep looping while trajectory length is greater than zero
+          } while (trajectoryLength > 0);
 
-          // calculate the lenght of the remaining trajectory
-          trajectoryLength -= collisionObject.collisionDistance;
-
-          // keep looping while trajectory length is greater than zero
-        } while (trajectoryLength > 0);
-
-
+        }
 
         //////////////////////
 
@@ -860,6 +901,9 @@ class playGame extends Phaser.Scene {
         if (this.specialArray.length > 0) {
           this.spawnSpecials();
         }
+        if (this.puArray.length > 0) {
+          this.spawnPU();
+        }
         if (this.level % 10 == 0) {
           this.changeBG();
         }
@@ -891,6 +935,7 @@ class playGame extends Phaser.Scene {
           this.handleBallVsStar();
         }
         this.handleBallVsSpecial();
+        this.handleBallVsPU();
       }
     }
   }
@@ -898,6 +943,7 @@ class playGame extends Phaser.Scene {
   // method to move all blocks down a row
   moveBlocks() {
     this.moveSpecials();
+    this.movePUs();
     // we will move blocks with a tween
     this.tweens.add({
 
@@ -945,10 +991,10 @@ class playGame extends Phaser.Scene {
           if (block.isToggle) {
             if (block.state == 'open') {
               block.state = 'closed';
-              block.setFrame(14)
+              block.setFrame(16)
             } else {
               block.state = 'open';
-              block.setFrame(15)
+              block.setFrame(17)
             }
 
           }
@@ -1053,6 +1099,56 @@ class playGame extends Phaser.Scene {
 
 
 
+  movePUs() {
+
+    // we will move blocks with a tween
+    this.tweens.add({
+      // we set all blocks as tween target
+      targets: this.puGroup.getChildren(),
+
+      // which properties are we going to tween?
+      props: {
+
+        // y property
+        y: {
+
+          // each block is moved down from its position by its display height
+          getEnd: function (target) {
+            return target.y + (target.displayHeight * 1.25);
+          }
+        },
+      },
+
+      // scope of callback function
+      callbackScope: this,
+
+      // once the tween completes...
+      onComplete: function () {
+
+        // execute an action on all blocks
+        Phaser.Actions.Call(this.puGroup.getChildren(), function (pu) {
+          // update row custom property
+          pu.row++;
+          if (pu.hit || pu.row == gameOptions.blockLines - 1) {
+
+            // push block into recycledBlocks array
+            this.recycledSpecials.push(pu);
+            // remove the block from blockGroup
+            this.puGroup.remove(pu);
+            // hide the block
+            pu.visible = false;
+          }
+        }, this);
+
+      },
+
+      // tween duration, 1/2 second
+      duration: 500,
+
+      // tween easing
+      ease: "Cubic.easeInOut"
+    });
+  }
 
 
 
@@ -1307,9 +1403,18 @@ class playGame extends Phaser.Scene {
         blockCount--;
         this.destroyBlockTween(block.x, block.y)
         var num = Phaser.Math.Between(0, 100);
-        if (num < gameOptions.spawnSpecialProbability && block.row < gameOptions.blockLines - 1) {
-          var xy = { x: block.x, y: block.y, row: block.row, col: block.col };
-          this.specialArray.push(xy);
+        if (block.row < gameOptions.blockLines - 1) {
+          if (num < gameOptions.spawnSpecialProbability) {
+            var xy = { x: block.x, y: block.y, row: block.row, col: block.col };
+            this.specialArray.push(xy);
+          } else {
+            var num2 = Phaser.Math.Between(0, 100);
+            if (num2 < gameOptions.spawnPUProbability) {
+              var xy = { x: block.x, y: block.y, row: block.row, col: block.col };
+              this.puArray.push(xy);
+            }
+          }
+
         }
         // push block into recycledBlocks array
         this.recycledBlocks.push(block);
@@ -1474,6 +1579,21 @@ class playGame extends Phaser.Scene {
           ease: "Cubic.easeOut"
         });
       }
+    }, null, this);
+  }
+  handleBallVsPU() {
+    this.physics.world.overlap(this.ballGroup, this.puGroup, function (ball, pu) {
+      if (!pu.hit) {
+        pu.hit = true;
+        this.recycledPUs.push(pu);
+
+        // remove the block from blockGroup
+        this.puGroup.remove(pu);
+
+        // hide the block
+        pu.visible = false;
+      }
+
     }, null, this);
   }
   handleBallVsSpecial() {

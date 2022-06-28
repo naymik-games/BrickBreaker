@@ -20,10 +20,12 @@ let gameOptions = {
   levelGoal: 300,
   // probability 0 -> 100 of having an extra ball in each line
   spawnSpecialProbability: 10,
+  spawnPUProbability: 10,
   extraBallProbability: 60,
   starProbability: 60,
   specialProbability: 20,
   toggleProbability: 15,
+
 
 }
 let defaultClassic = { lastScore: 0, highScore: 0 }
