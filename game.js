@@ -33,8 +33,9 @@ class playGame extends Phaser.Scene {
   create() {
     this.cameras.main.fadeIn(800, 0, 0, 0);
 
-    this.predictive = true
-
+    this.predictive = false
+    this.puTypes = [10, 11, 12, 13, 14, 15]
+    this.tempPUTypes = []
     console.log(rounds[round])
     // {col: 10, row: 13, max: 7, startBalls: 5, startLines: 5, startValue: 5},
     if (gameMode == 'puzzle') {
@@ -262,7 +263,31 @@ class playGame extends Phaser.Scene {
       ball.body.onWorldBounds = true;
     }
   }
+  addBounusBall(x, y, isExtraBall, r) {
 
+    // ball creation as a child of ballGroup or extraBallGroup
+    let ball = this.extraBallGroup.create(x, y, "ball");
+
+    // resize the ball
+    ball.displayWidth = this.ballSize;
+    ball.displayHeight = this.ballSize;
+
+    // maximum bounce
+    ball.body.setBounce(1, 1);
+
+    // if it's an extra ball...
+    if (isExtraBall) {
+
+      // set a custom "row" property to 1
+      ball.row = 1 + r;
+      ball.setTint(0xff0000)
+
+      // set a custom "collected" property to false
+      ball.collected = true;
+    }
+
+
+  }
   // method to add a block line
   addBlockLine(numLines) {
     this.level++;
@@ -509,7 +534,14 @@ class playGame extends Phaser.Scene {
     }
   }
   addPU(x, y, r, c, isRecycled) {
-    let putype = Phaser.Math.Between(10, 15);
+    //let putype = Phaser.Math.Between(10, 15);
+    if (this.tempPUTypes.length == 0) {
+      this.tempPUTypes = JSON.parse(JSON.stringify(this.puTypes));
+      // Used like so
+
+      this.shuffle(this.tempPUTypes);
+    }
+    let putype = this.tempPUTypes.pop()
     let pu = isRecycled ? this.recycledPUs.shift() : this.puGroup.create(x, y, "gems", 10);
     // resize the block
     pu.displayWidth = this.blockSize * .75;
@@ -1585,6 +1617,15 @@ class playGame extends Phaser.Scene {
     this.physics.world.overlap(this.ballGroup, this.puGroup, function (ball, pu) {
       if (!pu.hit) {
         pu.hit = true;
+
+        this.events.emit('pu', { type: pu.type });
+        if (pu.type == 14) {
+          for (let i = 0; i < 5; i++) {
+            this.addBounusBall(this.ballSize + i * this.ballSize, game.config.height - this.bottomPanel.displayHeight - this.ballSize / 2, true, gameOptions.blockLines)
+
+          }
+
+        }
         this.recycledPUs.push(pu);
 
         // remove the block from blockGroup
@@ -1661,6 +1702,25 @@ class playGame extends Phaser.Scene {
 
 
   }
+  shuffle(array) {
+    let currentIndex = array.length, randomIndex;
+
+    // While there remain elements to shuffle.
+    while (currentIndex != 0) {
+
+      // Pick a remaining element.
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
+
+    return array;
+  }
+
+
 }
 
 var runRaycaster = function (raycaster, x, y, angle, debugGraphics) {
