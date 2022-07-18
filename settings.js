@@ -20,7 +20,7 @@ let gameOptions = {
   levelGoal: 300,
   // probability 0 -> 100 of having an extra ball in each line
   spawnSpecialProbability: 10,
-  spawnPUProbability: 10,
+  spawnPUProbability: 7,
   extraBallProbability: 60,
   starProbability: 60,
   specialProbability: 20,

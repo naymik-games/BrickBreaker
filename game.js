@@ -930,7 +930,7 @@ class playGame extends Phaser.Scene {
         }
         this.drop = false
         this.bombPU = false;
-        if (this.specialArray.length > 0) {
+        if (this.specialArray.length > 0 && this.level > 10) {
           this.spawnSpecials();
         }
         if (this.puArray.length > 0) {

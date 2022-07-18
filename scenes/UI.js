@@ -18,7 +18,8 @@ class UI extends Phaser.Scene {
     this.levelText = this.add.bitmapText(game.config.width / 2, topP / 2, 'lato', '1', 130).setOrigin(.5);
     this.highText = this.add.bitmapText(game.config.width / 2 + 115, topP / 2 - 45, 'lato', gameData.best, 50).setOrigin(.5).setTint(0xff0000);
 
-
+    this.predict = false
+    this.predictLevel = 0
 
     this.star = this.physics.add.image(725, topP / 2, 'gems', 6).setScale(.75);
     this.starText = this.add.bitmapText(825, topP / 2, 'lato', '0', 70).setOrigin(.5);
@@ -37,6 +38,12 @@ class UI extends Phaser.Scene {
     this.Main = Main
     Main.events.on('level', function (data) {
       this.levelText.setText(data.level)
+      if (this.predict) {
+        if (this.predictLevel + 5 == data.level) {
+          this.predict = false
+          this.Main.predictive = false
+        }
+      }
     }, this);
 
     Main.events.on('star', function (data) {
@@ -244,6 +251,8 @@ class UI extends Phaser.Scene {
          }
        }); */
     } else if (action == 15) {
+      this.predict = true
+      this.predictLevel = this.Main.level
       this.Main.predictive = true
     }
   }
